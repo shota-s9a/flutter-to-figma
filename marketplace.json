@@ -1,0 +1,5 @@
+{
+  "name": "flutter-to-figma",
+  "description": "Flutter の実行中デバッグアプリから画面をキャプチャし、Figma 編集可能な JSON を生成するプラグイン。パッケージ追加不要。",
+  "plugins": ["flutter-to-figma"]
+}

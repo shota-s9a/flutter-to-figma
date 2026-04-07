@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flutter-to-figma/v1",
+  "title": "Flutter to Figma Intermediate Format",
+  "type": "object",
+  "required": ["$schema", "metadata", "root"],
+  "properties": {
+    "$schema": {
+      "const": "flutter-to-figma/v1"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "exportedAt": { "type": "string", "format": "date-time" },
+        "method": { "type": "string", "enum": ["test-runner", "code-analysis"] },
+        "screenSize": {
+          "type": "object",
+          "properties": {
+            "width": { "type": "number" },
+            "height": { "type": "number" }
+          }
+        },
+        "sourceWidget": { "type": "string" }
+      }
+    },
+    "root": { "$ref": "#/$defs/node" }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["type", "name"],
+      "properties": {
+        "type": { "type": "string", "enum": ["FRAME", "TEXT", "RECTANGLE", "ELLIPSE"] },
+        "name": { "type": "string" },
+        "width": { "type": "number" },
+        "height": { "type": "number" },
+        "x": { "type": "number", "default": 0 },
+        "y": { "type": "number", "default": 0 },
+        "layoutMode": { "type": "string", "enum": ["NONE", "HORIZONTAL", "VERTICAL"] },
+        "primaryAxisAlignItems": { "type": "string", "enum": ["MIN", "MAX", "CENTER", "SPACE_BETWEEN"] },
+        "counterAxisAlignItems": { "type": "string", "enum": ["MIN", "MAX", "CENTER"] },
+        "primaryAxisSizingMode": { "type": "string", "enum": ["FIXED", "AUTO"] },
+        "counterAxisSizingMode": { "type": "string", "enum": ["FIXED", "AUTO"] },
+        "layoutSizingHorizontal": { "type": "string", "enum": ["FIXED", "HUG", "FILL"] },
+        "layoutSizingVertical": { "type": "string", "enum": ["FIXED", "HUG", "FILL"] },
+        "itemSpacing": { "type": "number" },
+        "paddingLeft": { "type": "number" },
+        "paddingRight": { "type": "number" },
+        "paddingTop": { "type": "number" },
+        "paddingBottom": { "type": "number" },
+        "fills": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/paint" }
+        },
+        "strokes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/paint" }
+        },
+        "strokeWeight": { "type": "number" },
+        "cornerRadius": { "type": "number" },
+        "effects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/effect" }
+        },
+        "clipsContent": { "type": "boolean" },
+        "characters": { "type": "string" },
+        "fontSize": { "type": "number" },
+        "fontWeight": { "type": "integer" },
+        "fontFamily": { "type": "string" },
+        "textAlignHorizontal": { "type": "string", "enum": ["LEFT", "CENTER", "RIGHT", "JUSTIFIED"] },
+        "lineHeight": { "type": "number" },
+        "letterSpacing": { "type": "number" },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/node" }
+        }
+      }
+    },
+    "paint": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string", "enum": ["SOLID", "GRADIENT_LINEAR"] },
+        "color": { "$ref": "#/$defs/color" },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "gradientStops": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "position": { "type": "number" },
+              "color": { "$ref": "#/$defs/color" }
+            }
+          }
+        }
+      }
+    },
+    "color": {
+      "type": "object",
+      "required": ["r", "g", "b"],
+      "properties": {
+        "r": { "type": "number", "minimum": 0, "maximum": 1 },
+        "g": { "type": "number", "minimum": 0, "maximum": 1 },
+        "b": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "effect": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string", "enum": ["DROP_SHADOW", "INNER_SHADOW", "LAYER_BLUR"] },
+        "color": { "$ref": "#/$defs/color" },
+        "opacity": { "type": "number" },
+        "offset": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
+        "radius": { "type": "number" }
+      }
+    }
+  }
+}

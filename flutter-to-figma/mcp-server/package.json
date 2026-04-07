@@ -1,0 +1,20 @@
+{
+  "name": "flutter-to-figma-mcp",
+  "version": "0.1.0",
+  "description": "MCP Server for exporting Flutter screens to Figma JSON",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/ws": "^8.5.0",
+    "typescript": "^5.4.0"
+  }
+}

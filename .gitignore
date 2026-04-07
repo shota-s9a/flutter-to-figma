@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.dart_tool/
+.packages
+pubspec.lock
+*.js.map
+test_output/
+*.json.bak
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Build artifacts
+build/
+
+# Test outputs
+example-app/
+comparison/

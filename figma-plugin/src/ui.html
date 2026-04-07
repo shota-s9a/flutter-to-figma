@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      padding: 16px;
+      background: #fff;
+      color: #333;
+    }
+    h2 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    textarea {
+      width: 100%;
+      height: 260px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+      resize: vertical;
+      outline: none;
+    }
+    textarea:focus { border-color: #18a0fb; }
+    .file-drop {
+      width: 100%;
+      border: 2px dashed #ccc;
+      border-radius: 6px;
+      padding: 16px;
+      text-align: center;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #888;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .file-drop:hover, .file-drop.drag-over {
+      border-color: #18a0fb;
+      color: #18a0fb;
+    }
+    .file-drop input { display: none; }
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+    }
+    button {
+      background: #18a0fb;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 24px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    button:hover { background: #0d8de5; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    #status {
+      font-size: 12px;
+      color: #666;
+    }
+    #status.success { color: #1bc47d; }
+    #status.error { color: #f24822; }
+    .or-divider {
+      text-align: center;
+      font-size: 11px;
+      color: #aaa;
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <h2>Flutter to Figma</h2>
+  <textarea id="json-input" placeholder="Paste Flutter-to-Figma JSON here..."></textarea>
+  <div class="or-divider">or</div>
+  <div class="file-drop" id="file-drop">
+    Drop JSON file here or click to browse
+    <input type="file" id="file-input" accept=".json">
+  </div>
+  <div class="actions">
+    <span id="status"></span>
+    <button id="import-btn">Import</button>
+  </div>
+
+  <script>
+    var textarea = document.getElementById('json-input');
+    var btn = document.getElementById('import-btn');
+    var status = document.getElementById('status');
+    var fileDrop = document.getElementById('file-drop');
+    var fileInput = document.getElementById('file-input');
+
+    function importJSON(raw) {
+      if (!raw) {
+        status.textContent = 'No data to import';
+        status.className = 'error';
+        return;
+      }
+      try {
+        var data = JSON.parse(raw);
+        if (!data.root) {
+          status.textContent = 'Invalid: missing "root" key';
+          status.className = 'error';
+          return;
+        }
+        status.textContent = 'Importing...';
+        status.className = '';
+        btn.disabled = true;
+        parent.postMessage({ pluginMessage: { type: 'import', data: data } }, '*');
+      } catch (e) {
+        status.textContent = 'Invalid JSON: ' + e.message;
+        status.className = 'error';
+      }
+    }
+
+    btn.onclick = function() {
+      importJSON(textarea.value.trim());
+    };
+
+    // File upload
+    fileDrop.onclick = function() { fileInput.click(); };
+    fileInput.onchange = function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        textarea.value = ev.target.result;
+        status.textContent = 'File loaded: ' + file.name;
+        status.className = '';
+      };
+      reader.readAsText(file);
+    };
+
+    // Drag and drop
+    fileDrop.ondragover = function(e) {
+      e.preventDefault();
+      fileDrop.classList.add('drag-over');
+    };
+    fileDrop.ondragleave = function() {
+      fileDrop.classList.remove('drag-over');
+    };
+    fileDrop.ondrop = function(e) {
+      e.preventDefault();
+      fileDrop.classList.remove('drag-over');
+      var file = e.dataTransfer.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        textarea.value = ev.target.result;
+        status.textContent = 'File loaded: ' + file.name;
+        status.className = '';
+      };
+      reader.readAsText(file);
+    };
+
+    window.onmessage = function(event) {
+      var msg = event.data.pluginMessage;
+      if (!msg) return;
+      btn.disabled = false;
+      if (msg.type === 'done') {
+        status.textContent = 'Imported ' + msg.nodeCount + ' nodes';
+        status.className = 'success';
+      } else if (msg.type === 'error') {
+        status.textContent = 'Error: ' + msg.message;
+        status.className = 'error';
+      }
+    };
+  </script>
+</body>
+</html>

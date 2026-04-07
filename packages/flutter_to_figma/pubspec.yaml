@@ -1,0 +1,11 @@
+name: flutter_to_figma
+description: Export Flutter widget trees to Figma-compatible JSON via DevTools service extension.
+version: 0.2.0
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.10.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
