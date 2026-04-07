@@ -1,5 +1,5 @@
 node_modules/
-dist/
+# dist/ は MCP Server のビルド済みファイルを含めるためコミット対象
 .dart_tool/
 .packages
 pubspec.lock

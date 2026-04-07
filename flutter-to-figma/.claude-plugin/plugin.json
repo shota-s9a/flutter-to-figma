@@ -2,17 +2,17 @@
   "name": "flutter-to-figma",
   "version": "0.1.0",
   "description": "Flutter デバッグアプリの画面を Figma JSON にエクスポート。パッケージ追加不要、VM Service 経由で外部から取得。",
-  "skills": [
-    {
-      "name": "export-screen",
-      "description": "Flutter アプリの画面を Figma JSON にエクスポートする",
-      "path": "skills/export-screen.md"
-    }
-  ],
+  "author": {
+    "name": "shota-s9a"
+  },
+  "repository": "https://github.com/shota-s9a/flutter-to-figma",
+  "license": "MIT",
+  "keywords": ["flutter", "figma", "design", "export"],
+  "skills": "./skills/",
   "mcpServers": {
     "flutter-to-figma": {
       "command": "node",
-      "args": ["${pluginDir}/mcp-server/dist/index.js"],
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp-server/dist/index.js"],
       "env": {}
     }
   }

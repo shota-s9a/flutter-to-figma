@@ -1,5 +1,17 @@
 {
   "name": "flutter-to-figma",
-  "description": "Flutter の実行中デバッグアプリから画面をキャプチャし、Figma 編集可能な JSON を生成するプラグイン。パッケージ追加不要。",
-  "plugins": ["flutter-to-figma"]
+  "owner": {
+    "name": "shota-s9a"
+  },
+  "metadata": {
+    "description": "Flutter デバッグアプリの画面を Figma JSON にエクスポートする Claude Code プラグイン"
+  },
+  "plugins": [
+    {
+      "name": "flutter-to-figma",
+      "source": "./flutter-to-figma",
+      "description": "パッケージ追加不要。VM Service 経由で画面をキャプチャし Figma JSON を生成",
+      "version": "0.1.0"
+    }
+  ]
 }

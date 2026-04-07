@@ -1,0 +1,67 @@
+/**
+ * Flutter Inspector API wrapper — extracts Widget/RenderObject tree
+ * using built-in ext.flutter.inspector.* extensions.
+ */
+export class FlutterInspector {
+    client;
+    isolateId;
+    constructor(client, isolateId) {
+        this.client = client;
+        this.isolateId = isolateId;
+    }
+    /** Get the full widget summary tree from the root */
+    async getRootTree() {
+        const result = await this.client.callServiceExtension("ext.flutter.inspector.getRootWidgetSummaryTreeWithPreviews", this.isolateId);
+        return result.result;
+    }
+    /** Get detailed subtree for a specific node (with properties) */
+    async getDetailsSubtree(objectId, subtreeDepth = 2) {
+        const result = await this.client.callServiceExtension("ext.flutter.inspector.getDetailsSubtree", this.isolateId, {
+            arg: objectId,
+            objectGroup: "figma-export",
+            subtreeDepth: String(subtreeDepth),
+        });
+        return result.result;
+    }
+    /** Get layout info (size, constraints, offset) for a node */
+    async getLayoutExplorerNode(objectId) {
+        const result = await this.client.callServiceExtension("ext.flutter.inspector.getLayoutExplorerNode", this.isolateId, {
+            arg: objectId,
+            objectGroup: "figma-export",
+            subtreeDepth: "1",
+        });
+        return result.result;
+    }
+    /** Get properties of a node */
+    async getProperties(objectId) {
+        const result = await this.client.callServiceExtension("ext.flutter.inspector.getProperties", this.isolateId, {
+            arg: objectId,
+            objectGroup: "figma-export",
+        });
+        return result.result ?? [];
+    }
+    /** Take a screenshot of a RenderObject */
+    async screenshot(renderObjectId, width, height) {
+        try {
+            const result = await this.client.callServiceExtension("ext.flutter.inspector.screenshot", this.isolateId, {
+                id: renderObjectId,
+                width: String(width),
+                height: String(height),
+            });
+            return result.result?.image ?? null;
+        }
+        catch {
+            return null;
+        }
+    }
+    /** Evaluate a Dart expression against an object (for Color RGBA etc.) */
+    async evaluateOn(targetId, expression) {
+        try {
+            const result = await this.client.evaluate(this.isolateId, targetId, expression);
+            return result.valueAsString ?? null;
+        }
+        catch {
+            return null;
+        }
+    }
+}
