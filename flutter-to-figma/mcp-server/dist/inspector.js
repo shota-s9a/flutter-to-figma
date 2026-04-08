@@ -9,12 +9,31 @@ export class FlutterInspector {
         this.client = client;
         this.isolateId = isolateId;
     }
-    /** Get the full widget summary tree from the root */
+    /**
+     * Get the full widget tree from the root.
+     *
+     * Two-step process:
+     *   1. `getRootWidget` to get the root element's valueId
+     *   2. `getDetailsSubtree(rootValueId, depth=-1)` to retrieve the full
+     *      tree with node IDs that resolve with getLayoutExplorerNode.
+     *
+     * Using `getRootWidgetSummaryTreeWithPreviews` directly is broken
+     * because summary-tree valueIds return `{}` from getLayoutExplorerNode
+     * on Flutter 3.38+.
+     */
     async getRootTree() {
-        const result = await this.client.callServiceExtension("ext.flutter.inspector.getRootWidgetSummaryTreeWithPreviews", this.isolateId, {
-            groupName: "figma-export",
+        const rootResult = await this.client.callServiceExtension("ext.flutter.inspector.getRootWidget", this.isolateId, {
+            objectGroup: "figma-export",
         });
-        return result.result;
+        const root = rootResult.result;
+        if (!root?.valueId) return root;
+        // Fetch full subtree from root
+        const detailsResult = await this.client.callServiceExtension("ext.flutter.inspector.getDetailsSubtree", this.isolateId, {
+            arg: root.valueId,
+            objectGroup: "figma-export",
+            subtreeDepth: "10000",
+        });
+        return detailsResult.result;
     }
     /** Get detailed subtree for a specific node (with properties) */
     async getDetailsSubtree(objectId, subtreeDepth = 2) {
@@ -27,9 +46,12 @@ export class FlutterInspector {
     }
     /** Get layout info (size, constraints, offset) for a node */
     async getLayoutExplorerNode(objectId) {
+        // Flutter's getLayoutExplorerNode extension expects
+        // `id` and `groupName`, NOT `arg` and `objectGroup` (those are
+        // for other inspector extensions like getDetailsSubtree).
         const result = await this.client.callServiceExtension("ext.flutter.inspector.getLayoutExplorerNode", this.isolateId, {
-            arg: objectId,
-            objectGroup: "figma-export",
+            id: objectId,
+            groupName: "figma-export",
             subtreeDepth: "1",
         });
         return result.result;
