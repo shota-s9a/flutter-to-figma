@@ -484,28 +484,10 @@ export class FigmaConverter {
                 return figma;
             }
         }
-        // Fallback: try screenshot for network images or missing assets
-        if (nodeId && (isNetworkImage || !assetPath)) {
-            try {
-                const screenshot = await this.inspector.screenshot(nodeId, Math.round(base.width) || 100, Math.round(base.height) || 100);
-                if (screenshot) {
-                    figma.fills = [
-                        {
-                            type: "IMAGE",
-                            imageData: screenshot,
-                            imageMimeType: "image/png",
-                            scaleMode: "FIT",
-                        },
-                    ];
-                    figma.imageData = screenshot;
-                    figma.imageMimeType = "image/png";
-                    console.error(`[flutter-to-figma] Captured screenshot for ${figma.name}`);
-                }
-            }
-            catch (err) {
-                console.error(`[flutter-to-figma] Screenshot fallback failed for Image:`, err instanceof Error ? err.message : err);
-            }
-        }
+        // Screenshot fallback disabled: inspector.screenshot on individual
+        // nodes triggers a Flutter framework assertion
+        // (debugAlsoPaintedParent || childLayer.attached). Use the top-level
+        // screenshot_node tool explicitly instead.
         return figma;
     }
     async buildIconNode(node, props, base, nodeId) {
@@ -532,28 +514,11 @@ export class FigmaConverter {
                 ];
             }
         }
-        // Try screenshot to capture the actual icon glyph
-        if (nodeId) {
-            try {
-                const screenshot = await this.inspector.screenshot(nodeId, Math.round(base.width) || 24, Math.round(base.height) || 24);
-                if (screenshot) {
-                    figma.fills = [
-                        {
-                            type: "IMAGE",
-                            imageData: screenshot,
-                            imageMimeType: "image/png",
-                            scaleMode: "FIT",
-                        },
-                    ];
-                    figma.imageData = screenshot;
-                    figma.imageMimeType = "image/png";
-                    console.error(`[flutter-to-figma] Captured screenshot for Icon: ${iconName}`);
-                }
-            }
-            catch (err) {
-                console.error(`[flutter-to-figma] Screenshot fallback failed for Icon:`, err instanceof Error ? err.message : err);
-            }
-        }
+        // Icon glyph screenshot disabled: inspector.screenshot on individual
+        // Icon render objects triggers a Flutter framework assertion
+        // (debugAlsoPaintedParent || childLayer.attached) that pauses the
+        // simulator with an exception dialog. Icons now carry only name/color
+        // metadata; use screenshot_node tool explicitly if glyphs are needed.
         return figma;
     }
     buildDividerNode(widgetType, props, base) {
