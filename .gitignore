@@ -20,3 +20,6 @@ build/
 # Test outputs
 example-app/
 comparison/
+
+# Local debug scripts
+flutter-to-figma/mcp-server/debug-call.mjs

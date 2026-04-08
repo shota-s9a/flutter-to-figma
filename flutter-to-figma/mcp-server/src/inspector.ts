@@ -39,7 +39,10 @@ export class FlutterInspector {
   async getRootTree(): Promise<DiagNode> {
     const result = await this.client.callServiceExtension(
       "ext.flutter.inspector.getRootWidgetSummaryTreeWithPreviews",
-      this.isolateId
+      this.isolateId,
+      {
+        groupName: "figma-export",
+      }
     );
     return result.result as unknown as DiagNode;
   }
@@ -108,6 +111,24 @@ export class FlutterInspector {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Find all nodes in the tree whose widget type or runtimeType matches `name`.
+   * Returns nodes with their objectId/valueId so callers can screenshot or inspect them.
+   */
+  async findNodesByName(name: string): Promise<DiagNode[]> {
+    const root = await this.getRootTree();
+    const matches: DiagNode[] = [];
+    const walk = (node: DiagNode) => {
+      const widgetType = node.description?.split("(")[0]?.trim() ?? "";
+      if (widgetType === name || node.name === name) {
+        matches.push(node);
+      }
+      for (const child of node.children ?? []) walk(child);
+    };
+    walk(root);
+    return matches;
   }
 
   /** Evaluate a Dart expression against an object (for Color RGBA etc.) */

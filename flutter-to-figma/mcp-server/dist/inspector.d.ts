@@ -44,6 +44,11 @@ export declare class FlutterInspector {
     getProperties(objectId: string): Promise<DiagProperty[]>;
     /** Take a screenshot of a RenderObject */
     screenshot(renderObjectId: string, width: number, height: number): Promise<string | null>;
+    /**
+     * Find all nodes in the tree whose widget type or runtimeType matches `name`.
+     * Returns nodes with their objectId/valueId so callers can screenshot or inspect them.
+     */
+    findNodesByName(name: string): Promise<DiagNode[]>;
     /** Evaluate a Dart expression against an object (for Color RGBA etc.) */
     evaluateOn(targetId: string, expression: string): Promise<string | null>;
 }

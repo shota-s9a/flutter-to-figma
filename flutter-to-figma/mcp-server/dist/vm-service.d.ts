@@ -7,6 +7,11 @@ export declare class VmServiceClient {
     private requestId;
     private pending;
     connect(uri: string): Promise<void>;
+    /**
+     * When DDS is running, the raw VM Service URI returns 302 with the DDS URI.
+     * Extract the ws:// URI from the redirect's query parameter.
+     */
+    private resolveDdsUri;
     call(method: string, params?: Record<string, unknown>): Promise<Record<string, unknown>>;
     dispose(): Promise<void>;
     getVM(): Promise<Record<string, unknown>>;

@@ -11,7 +11,9 @@ export class FlutterInspector {
     }
     /** Get the full widget summary tree from the root */
     async getRootTree() {
-        const result = await this.client.callServiceExtension("ext.flutter.inspector.getRootWidgetSummaryTreeWithPreviews", this.isolateId);
+        const result = await this.client.callServiceExtension("ext.flutter.inspector.getRootWidgetSummaryTreeWithPreviews", this.isolateId, {
+            groupName: "figma-export",
+        });
         return result.result;
     }
     /** Get detailed subtree for a specific node (with properties) */
@@ -53,6 +55,24 @@ export class FlutterInspector {
         catch {
             return null;
         }
+    }
+    /**
+     * Find all nodes in the tree whose widget type or runtimeType matches `name`.
+     * Returns nodes with their objectId/valueId so callers can screenshot or inspect them.
+     */
+    async findNodesByName(name) {
+        const root = await this.getRootTree();
+        const matches = [];
+        const walk = (node) => {
+            const widgetType = node.description?.split("(")[0]?.trim() ?? "";
+            if (widgetType === name || node.name === name) {
+                matches.push(node);
+            }
+            for (const child of node.children ?? [])
+                walk(child);
+        };
+        walk(root);
+        return matches;
     }
     /** Evaluate a Dart expression against an object (for Color RGBA etc.) */
     async evaluateOn(targetId, expression) {
