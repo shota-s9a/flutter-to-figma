@@ -111,7 +111,7 @@ server.tool("export_screen", "Flutter デバッグアプリの現在の画面を
         const isolateId = await client.getIsolateId();
         // Create inspector and converter
         const inspector = new FlutterInspector(client, isolateId);
-        const converter = new FigmaConverter(inspector, { projectRoot: project_root });
+        const converter = new FigmaConverter(inspector, project_root);
         // Export
         const figmaJson = await converter.convert();
         // Set page name if provided
