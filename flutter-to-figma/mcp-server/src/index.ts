@@ -4,9 +4,13 @@
  * flutter-to-figma MCP Server
  *
  * Tools:
- *   list_flutter_apps  — Find running Flutter debug apps and VM Service URIs
- *   export_screen       — Export current screen to Figma JSON
- *   capture_screenshot  — Take a screenshot of the current screen
+ *   list_flutter_apps   — Find running Flutter debug apps and VM Service URIs
+ *   export_screen        — Export current screen to Figma JSON
+ *   capture_screenshot   — Take a screenshot of the current screen
+ *   screenshot_node      — Screenshot a specific widget by class name
+ *   extract_theme        — Extract design tokens from Flutter source
+ *   serve_html           — Serve a local directory over HTTP (for Code to Canvas)
+ *   stop_html_server     — Stop a previously started HTTP server
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -527,7 +531,165 @@ server.tool(
   }
 );
 
+// ── Tool: serve_html ──
+
+const runningServers = new Map<number, http.Server>();
+
+server.tool(
+  "serve_html",
+  "指定ディレクトリを静的 HTTP サーバーとして配信する。Figma の Code to Canvas (generate_figma_design) に食わせる HTML プレビュー用。返り値の URL をそのまま Playwright / generate_figma_design に渡せる。サーバーは stop_html_server で停止するまで動き続ける。",
+  {
+    directory: z
+      .string()
+      .describe("配信するディレクトリの絶対パス (index.html を含む)"),
+    port: z
+      .number()
+      .optional()
+      .describe("ポート番号 (省略時は 8770-8799 の空きを自動選択)"),
+  },
+  async ({ directory, port }) => {
+    if (!existsSync(directory)) {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `ディレクトリが見つかりません: ${directory}`,
+          },
+        ],
+      };
+    }
+    const indexPath = join(directory, "index.html");
+    if (!existsSync(indexPath)) {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `index.html が見つかりません: ${indexPath}`,
+          },
+        ],
+      };
+    }
+
+    const portsToTry = port
+      ? [port]
+      : Array.from({ length: 30 }, (_, i) => 8770 + i);
+
+    for (const p of portsToTry) {
+      if (runningServers.has(p)) continue;
+      try {
+        const srv = await startStaticServer(directory, p);
+        runningServers.set(p, srv);
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `ローカルサーバーを起動しました。\n\n- URL: http://localhost:${p}\n- 配信元: ${directory}\n\n停止するには stop_html_server に port=${p} を渡してください。`,
+            },
+          ],
+        };
+      } catch {
+        // port in use, try next
+      }
+    }
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: `利用可能なポートが見つかりませんでした (試行範囲: 8770-8799)`,
+        },
+      ],
+    };
+  }
+);
+
+// ── Tool: stop_html_server ──
+
+server.tool(
+  "stop_html_server",
+  "serve_html で起動したローカル HTTP サーバーを停止する",
+  {
+    port: z.number().describe("停止するサーバーのポート番号"),
+  },
+  async ({ port }) => {
+    const srv = runningServers.get(port);
+    if (!srv) {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `ポート ${port} にサーバーが登録されていません。`,
+          },
+        ],
+      };
+    }
+    await new Promise<void>((resolve) => srv.close(() => resolve()));
+    runningServers.delete(port);
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: `ポート ${port} のサーバーを停止しました。`,
+        },
+      ],
+    };
+  }
+);
+
 // ── Helpers ──
+
+function startStaticServer(
+  directory: string,
+  port: number
+): Promise<http.Server> {
+  return new Promise((resolve, reject) => {
+    const srv = http.createServer((req, res) => {
+      try {
+        const reqUrl = decodeURIComponent((req.url ?? "/").split("?")[0]);
+        // Prevent directory traversal: reject any ".." in the decoded path.
+        if (reqUrl.includes("..")) {
+          res.writeHead(400).end("bad request");
+          return;
+        }
+        const rel = reqUrl === "/" ? "/index.html" : reqUrl;
+        const filePath = join(directory, rel);
+        if (!filePath.startsWith(directory)) {
+          res.writeHead(403).end("forbidden");
+          return;
+        }
+        if (!existsSync(filePath) || statSync(filePath).isDirectory()) {
+          res.writeHead(404).end("not found");
+          return;
+        }
+        const ext = filePath.substring(filePath.lastIndexOf(".") + 1).toLowerCase();
+        const mime: Record<string, string> = {
+          html: "text/html; charset=utf-8",
+          css: "text/css; charset=utf-8",
+          js: "application/javascript; charset=utf-8",
+          json: "application/json; charset=utf-8",
+          svg: "image/svg+xml",
+          png: "image/png",
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+          webp: "image/webp",
+          gif: "image/gif",
+          woff: "font/woff",
+          woff2: "font/woff2",
+        };
+        res.writeHead(200, {
+          "content-type": mime[ext] ?? "application/octet-stream",
+          "cache-control": "no-store",
+        });
+        res.end(readFileSync(filePath));
+      } catch (e) {
+        res.writeHead(500).end(String(e));
+      }
+    });
+    srv.on("error", reject);
+    srv.listen(port, "127.0.0.1", () => resolve(srv));
+  });
+}
+
 
 
 /**
