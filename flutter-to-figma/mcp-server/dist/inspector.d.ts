@@ -34,11 +34,23 @@ export declare class FlutterInspector {
     private client;
     private isolateId;
     constructor(client: VmServiceClient, isolateId: string);
-    /** Get the full widget summary tree from the root */
+    /**
+     * Get the full widget tree from the root.
+     *
+     * Two-step: getRootWidget → getDetailsSubtree(rootValueId, depth=10000).
+     * `getRootWidgetSummaryTreeWithPreviews` cannot be used because on
+     * Flutter 3.27+ the summary-tree valueIds return `{}` from
+     * getLayoutExplorerNode, so every node ends up with size 0x0.
+     */
     getRootTree(): Promise<DiagNode>;
     /** Get detailed subtree for a specific node (with properties) */
     getDetailsSubtree(objectId: string, subtreeDepth?: number): Promise<DiagNode>;
-    /** Get layout info (size, constraints, offset) for a node */
+    /**
+     * Get layout info (size, constraints, offset) for a node.
+     * Note: this extension expects `id`/`groupName`, NOT `arg`/`objectGroup`
+     * (which is what getDetailsSubtree/getProperties use). Passing the wrong
+     * names silently returns an empty map, leaving every node with size 0x0.
+     */
     getLayoutExplorerNode(objectId: string): Promise<DiagNode>;
     /** Get properties of a node */
     getProperties(objectId: string): Promise<DiagProperty[]>;

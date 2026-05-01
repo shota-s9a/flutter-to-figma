@@ -835,8 +835,12 @@ export class FigmaConverter {
         );
         props = details.properties ?? [];
         layout = await this.inspector.getLayoutExplorerNode(node.objectId);
-      } catch {
-        // Node may not have layout info
+      } catch (err) {
+        // Surface inspector errors so regressions like the 4/9 dist rebuild
+        // (which silently broke getLayoutExplorerNode) cannot recur unnoticed.
+        console.error(
+          `[figma-converter] inspector lookup failed for ${widgetType} (objectId=${node.objectId}): ${(err as Error).message}`
+        );
       }
     }
 
