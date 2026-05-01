@@ -1,0 +1,31 @@
+#!/bin/sh
+# Rebuild flutter-to-figma/mcp-server/dist when its src/ is touched, and
+# stage the regenerated output so dist/ never drifts from src/.
+#
+# Background: in 4/9 a hand-applied dist/ fix was silently reverted by a
+# later rebuild from stale src/, leaving every exported node with size 0x0.
+# This hook makes that scenario impossible.
+#
+# Bypass with `git commit --no-verify` if you absolutely need to.
+set -e
+
+repo_root=$(git rev-parse --show-toplevel)
+
+src_changed=$(git diff --cached --name-only --diff-filter=ACMR \
+  | grep '^flutter-to-figma/mcp-server/src/' || true)
+
+if [ -z "$src_changed" ]; then
+  exit 0
+fi
+
+echo "[pre-commit] mcp-server/src/ changed — rebuilding dist/"
+
+if ! command -v npm >/dev/null 2>&1; then
+  echo "[pre-commit] npm not found in PATH; cannot rebuild dist/." >&2
+  echo "             Install Node/npm or commit with --no-verify." >&2
+  exit 1
+fi
+
+(cd "$repo_root/flutter-to-figma/mcp-server" && npm run --silent build)
+
+git add "$repo_root/flutter-to-figma/mcp-server/dist"

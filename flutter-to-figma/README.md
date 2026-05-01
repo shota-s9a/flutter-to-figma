@@ -99,6 +99,16 @@ claude mcp add --scope user --transport http figma https://mcp.figma.com/mcp
 
 `/mcp` で `figma` を選択 → 認証。その後 `generate_figma_design` ツールで HTML ページを Figma フレームに変換できる。
 
+### 開発者向け: pre-commit hook の有効化
+
+`mcp-server/src/` を編集したら同じコミットで `dist/` を再生成するため、リポジトリ同梱の hook を有効化してください。clone 直後に1度だけ実行:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+`mcp-server/src/` への変更がステージされていると `npm run build` が走り、再生成された `dist/` も自動で `git add` されます。`--no-verify` で bypass 可。
+
 ## 使い方
 
 1. Flutter アプリをデバッグモードで起動
